@@ -1,2 +1,2 @@
 # ars
-Personal rust utility library 
+A1cey's personal rust utility library.
