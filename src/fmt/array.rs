@@ -7,11 +7,12 @@ use core::{
 
 /// A helper struct for formatting arrays.
 ///
-/// # Example:
+/// # Example
 /// ```
+/// # use ars::fmt::array::FmtArray;
 /// let array = [1, 2, 3];
 /// let formatted = FmtArray(&array);
-/// assert_eq!(formatted.to_string(), "[1, 2, 3]");
+/// assert_eq!(formatted.to_string(), String::from("[1, 2, 3]"));
 /// assert_eq!(format!("{}", formatted), "[1, 2, 3]");
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
@@ -52,7 +53,7 @@ mod tests {
     fn test_fmt_array_with_to_string() {
         let array = [1, 2, 3];
         let formatted = FmtArray(&array);
-        assert_eq!(formatted.to_string(), "[1, 2, 3]");
+        assert_eq!(formatted.to_string(), String::from("[1, 2, 3]"));
     }
 
     #[test]
