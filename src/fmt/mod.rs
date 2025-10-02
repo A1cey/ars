@@ -1,2 +1,2 @@
 //! Different formatting utilities. 
-pub mod array;
+pub mod slice;
