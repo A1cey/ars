@@ -1,2 +1,3 @@
-//! Different formatting utilities. 
+//! Different formatting utilities.
+
 pub mod slice;
