@@ -51,8 +51,10 @@ impl<T: Display> Display for FmtSlice<'_, T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    extern crate std;
     use std::format;
-    use std::string::ToString;
+    use std::string::{String, ToString};
+    use std::vec;
 
     #[test]
     fn test_fmt_array_with_to_string() {

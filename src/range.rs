@@ -9,7 +9,6 @@
 //! let r = ars::range::Range::new(1, 4);
 //! assert_eq!(&a[r], &[1, 2, 3]);
 //! ```
-use core::ops::Index;
 
 /// A compact, copyable index range holding a `start` (inclusive) and `end` (exclusive).
 ///
@@ -116,7 +115,7 @@ impl Range {
     }
 }
 
-impl<T> Index<Range> for [T] {
+impl<T> core::ops::Index<Range> for [T] {
     type Output = [T];
 
     fn index(&self, index: Range) -> &Self::Output {
@@ -124,7 +123,25 @@ impl<T> Index<Range> for [T] {
     }
 }
 
-impl<T> Index<&Range> for [T] {
+impl<T> core::ops::Index<&Range> for [T] {
+    type Output = [T];
+
+    fn index(&self, index: &Range) -> &Self::Output {
+        &self[index.0..index.1]
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<T> core::ops::Index<Range> for alloc::vec::Vec<T> {
+    type Output = [T];
+
+    fn index(&self, index: Range) -> &Self::Output {
+        &self[index.0..index.1]
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<T> core::ops::Index<&Range> for alloc::vec::Vec<T> {
     type Output = [T];
 
     fn index(&self, index: &Range) -> &Self::Output {
@@ -159,21 +176,31 @@ impl From<Range> for (usize, usize) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    extern crate std;
     use std::collections::hash_map::DefaultHasher;
+    use std::format;
     use std::hash::{Hash, Hasher};
 
     #[test]
     fn index_with_range_by_value() {
         let s: &[i32] = &[10, 20, 30, 40, 50];
         let r = Range::new(1, 4);
-        assert_eq!(s[r].to_vec(), vec![20, 30, 40]);
+        assert_eq!(&s[r], &[20, 30, 40]);
     }
 
     #[test]
     fn index_with_range_by_ref() {
         let s: &[i32] = &[1, 2, 3, 4];
         let r = Range::new(0, 2);
-        assert_eq!(s[&r].to_vec(), vec![1, 2]);
+        assert_eq!(&s[&r], &[1, 2]);
+    }
+
+    #[cfg(feature = "alloc")]
+    #[test]
+    fn index_vec() {
+        let s = std::vec::Vec::from(&[1, 2, 3, 4]);
+        let r = Range::new(0, 2);
+        assert_eq!(&s[&r], &[1, 2]);
     }
 
     #[test]
