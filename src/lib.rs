@@ -7,3 +7,4 @@ extern crate alloc;
 
 pub mod fmt;
 pub mod range;
+pub mod ascii;
