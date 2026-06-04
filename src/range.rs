@@ -161,6 +161,20 @@ impl From<Range> for core::ops::Range<usize> {
     }
 }
 
+impl From<core::range::RangeInclusive<usize>> for Range {
+    fn from(r: core::range::RangeInclusive<usize>) -> Self {
+        let exclusive_end = r.last + 1;
+        Self(r.start, exclusive_end)
+    }
+}
+
+impl From<Range> for core::range::RangeInclusive<usize> {
+    fn from(r: Range) -> Self {
+        let inclusive_end = r.1.saturating_sub(1);
+        core::range::RangeInclusive::from(r.0..=inclusive_end)
+    }
+}
+
 impl From<(usize, usize)> for Range {
     fn from(t: (usize, usize)) -> Self {
         Self(t.0, t.1)
@@ -281,5 +295,11 @@ mod tests {
         assert_eq!(rr, Range::new(2, 6));
         let tup: (usize, usize) = rr.into();
         assert_eq!(tup, (2, 6));
+
+        let r = core::range::RangeInclusive::from(1usize..=5);
+        let rr = Range::from(r);
+        assert_eq!(rr, Range::new(1, 6));
+        let r1 = core::range::RangeInclusive::from(rr);
+        assert_eq!(r1, r);
     }
 }
