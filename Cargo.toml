@@ -6,8 +6,9 @@ edition = "2024"
 [features]
 default = []
 alloc = []
+std = []
 
 [profile.test]
-features = ["alloc"]
+features = ["alloc", "std"]
 
 [dependencies]

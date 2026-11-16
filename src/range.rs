@@ -171,7 +171,7 @@ impl From<core::range::RangeInclusive<usize>> for Range {
 impl From<Range> for core::range::RangeInclusive<usize> {
     fn from(r: Range) -> Self {
         let inclusive_end = r.1.saturating_sub(1);
-        core::range::RangeInclusive::from(r.0..=inclusive_end)
+        Self::from(r.0..=inclusive_end)
     }
 }
 

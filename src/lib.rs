@@ -4,10 +4,13 @@
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
+#[cfg(feature = "std")]
+extern crate std;
 
-#[cfg(feature = "alloc")]
+#[cfg(feature = "std")]
 pub mod apq;
 pub mod ascii;
 pub mod counted_enum;
 pub mod fmt;
 pub mod range;
+pub mod rng;
