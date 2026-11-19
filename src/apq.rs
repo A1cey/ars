@@ -1,12 +1,26 @@
-mod binary;
+mod binary_heap;
+mod pairing_heap;
 
-pub use binary::BinaryHeap;
+pub use binary_heap::BinaryHeap;
+pub use pairing_heap::PairingHeap;
 
 pub trait AddressablePriorityQueue: Sized {
     type Handle;
     type Item: PartialEq + PartialOrd;
 
-    fn build(items: impl IntoIterator<Item = Self::Item>) -> Self;
+    #[must_use]
+    fn new() -> Self;
+
+    #[must_use]
+    fn build(items: impl IntoIterator<Item = Self::Item>) -> Self {
+        let mut apq = Self::new();
+
+        for item in items {
+            apq.insert(item);
+        }
+
+        apq
+    }
 
     fn insert(&mut self, item: Self::Item) -> Self::Handle;
 

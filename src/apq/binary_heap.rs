@@ -4,41 +4,29 @@ use alloc::vec::Vec;
 
 use crate::{apq::AddressablePriorityQueue, rng::PCGRand};
 
-type Children<'item, Item> = (
-    Option<(BinaryHeapHandle, &'item Item)>,
-    Option<(BinaryHeapHandle, &'item Item)>,
-);
+type Children<'item, Item> = (Option<(Handle, &'item Item)>, Option<(Handle, &'item Item)>);
 
 #[derive(Debug, Default)]
 pub struct BinaryHeap<Item> {
-    items: Vec<(BinaryHeapHandle, Item)>,
-    handles: HashMap<BinaryHeapHandle, usize>,
+    items: Vec<(Handle, Item)>,
+    handles: HashMap<Handle, usize>,
     rng: PCGRand,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct BinaryHeapHandle(u64);
+pub struct Handle(u64);
 
 impl<Item: PartialEq + PartialOrd> BinaryHeap<Item> {
-    #[must_use]
-    pub fn new() -> Self {
-        Self {
-            items: Vec::new(),
-            handles: HashMap::new(),
-            rng: PCGRand::default(),
-        }
+    const fn create_handle(&mut self) -> Handle {
+        Handle(self.rng.random())
     }
 
-    const fn create_handle(&mut self) -> BinaryHeapHandle {
-        BinaryHeapHandle(self.rng.random())
-    }
-
-    fn item(&self, handle: BinaryHeapHandle) -> Option<&Item> {
+    fn item(&self, handle: Handle) -> Option<&Item> {
         let idx = *self.handles.get(&handle)?;
         self.items.get(idx).map(|(_, item)| item)
     }
 
-    fn swap(&mut self, first_handle: BinaryHeapHandle, second_handle: BinaryHeapHandle) {
+    fn swap(&mut self, first_handle: Handle, second_handle: Handle) {
         let first_idx = *self
             .handles
             .get(&first_handle)
@@ -58,7 +46,7 @@ impl<Item: PartialEq + PartialOrd> BinaryHeap<Item> {
             .and_modify(|e| *e = first_idx);
     }
 
-    fn bubble_up(&mut self, handle: BinaryHeapHandle) {
+    fn bubble_up(&mut self, handle: Handle) {
         while let Some((parent_handle, parent)) = self.parent(handle)
             && let Some(curr) = self.item(handle)
             && curr < parent
@@ -67,7 +55,7 @@ impl<Item: PartialEq + PartialOrd> BinaryHeap<Item> {
         }
     }
 
-    fn bubble_down(&mut self, handle: BinaryHeapHandle) {
+    fn bubble_down(&mut self, handle: Handle) {
         while let Some(curr) = self.item(handle) {
             match self.children(handle) {
                 (Some((left_handle, left)), Some((right_handle, right))) => {
@@ -98,7 +86,7 @@ impl<Item: PartialEq + PartialOrd> BinaryHeap<Item> {
         }
     }
 
-    fn parent(&self, handle: BinaryHeapHandle) -> Option<(BinaryHeapHandle, &Item)> {
+    fn parent(&self, handle: Handle) -> Option<(Handle, &Item)> {
         let idx = *self.handles.get(&handle)?;
 
         if idx == 0 {
@@ -110,7 +98,7 @@ impl<Item: PartialEq + PartialOrd> BinaryHeap<Item> {
             .map(|(parent_handle, parent_item)| (*parent_handle, parent_item))
     }
 
-    fn children(&self, handle: BinaryHeapHandle) -> Children<'_, Item> {
+    fn children(&self, handle: Handle) -> Children<'_, Item> {
         let idx = self.handles.get(&handle).expect("Valid internal handle");
 
         let left = idx * 2 + 1;
@@ -123,17 +111,16 @@ impl<Item: PartialEq + PartialOrd> BinaryHeap<Item> {
 }
 
 impl<Item: PartialEq + PartialOrd> AddressablePriorityQueue for BinaryHeap<Item> {
-    type Handle = BinaryHeapHandle;
+    type Handle = Handle;
     type Item = Item;
 
-    fn build(items: impl IntoIterator<Item = Self::Item>) -> Self {
-        let mut apq = Self::new();
-
-        for item in items {
-            apq.insert(item);
+    #[must_use]
+    fn new() -> Self {
+        Self {
+            items: Vec::new(),
+            handles: HashMap::new(),
+            rng: PCGRand::default(),
         }
-
-        apq
     }
 
     fn insert(&mut self, item: Item) -> Self::Handle {
@@ -161,7 +148,7 @@ impl<Item: PartialEq + PartialOrd> AddressablePriorityQueue for BinaryHeap<Item>
         self.items.first().map(|(_, item)| item)
     }
 
-    fn remove(&mut self, handle: BinaryHeapHandle) -> Option<Item> {
+    fn remove(&mut self, handle: Handle) -> Option<Item> {
         let (last_handle, _) = *self.items.last()?; // get the handle before swap
         let idx = *self.handles.get(&handle)?;
         let (_, item) = self.items.swap_remove(idx);
@@ -180,7 +167,7 @@ impl<Item: PartialEq + PartialOrd> AddressablePriorityQueue for BinaryHeap<Item>
         Some(item)
     }
 
-    fn decrease_key(&mut self, handle: BinaryHeapHandle, new_key: Item) {
+    fn decrease_key(&mut self, handle: Handle, new_key: Item) {
         if let Some(idx) = self.handles.get(&handle)
             && let Some((_, item)) = self.items.get_mut(*idx)
             && new_key < *item
