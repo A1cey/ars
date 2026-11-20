@@ -74,6 +74,20 @@ impl<Item: PartialEq + PartialOrd> PairingHeap<Item> {
         self.node(handle).parent.is_none()
     }
 
+    fn update_min_ptr(&mut self) {
+        match self.min_ptr {
+            Some(min) => {
+                let curr = self.node(handle);
+                let min = self.node(min);
+
+                if curr.item < min.item {
+                    self.min_ptr = Some(handle)
+                }
+            }
+            None => self.min_ptr = Some(handle),
+        };
+    }
+
     fn new_tree(&mut self, handle: Handle) {
         self.forest.insert(handle);
 
@@ -213,14 +227,44 @@ impl<Item: PartialEq + PartialOrd> AddressablePriorityQueue for PairingHeap<Item
     }
 
     fn remove(&mut self, handle: Self::Handle) -> Option<Self::Item> {
-        todo!()
+        // guard for external handle
+        if !self.handles.contains_key(&handle.id) {
+            return None;
+        }
+
+        if self.min_ptr == Some(handle) {
+            self.delete_min()
+        } else {
+            self.cut(handle);
+            self.forest.remove(&handle);
+            let node_idx = self.handles.remove(&handle.id)?;
+            let node = self.nodes.remove(node_idx);
+            let children = node.children.iter().copied().collect::<Vec<_>>();
+
+            for child in children {
+                self.cut(child);
+            }
+
+            Some(node.item)
+        }
     }
 
     fn decrease_key(&mut self, handle: Self::Handle, new_key: Self::Item) {
-        todo!()
+        if !self.handles.contains_key(&handle) {
+            panic!("Invalid handle");
+        }
+
+        let node = self.node(handle);
+        if node.item <= new_key {
+            return;
+        }
+
+        self.cut(handle);
     }
 
     fn merge(&mut self, other: impl AddressablePriorityQueue<Item = Self::Item>) {
-        todo!()
+        for item in other.into_sorted_iter() {
+            self.insert(item);
+        }
     }
 }
